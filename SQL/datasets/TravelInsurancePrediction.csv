@@ -1,4 +1,4 @@
-,Age,Employment Type,GraduateOrNot,AnnualIncome,FamilyMembers,ChronicDiseases,FrequentFlyer,EverTravelledAbroad,TravelInsurance
+Index,Age,EmploymentType,GraduateOrNot,AnnualIncome,FamilyMembers,ChronicDiseases,FrequentFlyer,EverTravelledAbroad,TravelInsurance
 0,31,Government Sector,Yes,400000,6,1,No,No,0
 1,31,Private Sector/Self Employed,Yes,1250000,7,0,No,No,0
 2,34,Private Sector/Self Employed,Yes,500000,4,1,No,No,1
