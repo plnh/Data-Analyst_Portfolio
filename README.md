@@ -7,6 +7,6 @@ SQL: Examples of executing and formulating SQL queries for selected simulated bu
 
 Python Data Manipulation: Examples of statistic analysis in in Python 3 using pandas DataFrame, matplotlib etc.
 ## In Progress
-Excel: example of dashboard, functions for managing your projects.
+Excel: example of dashboards, functions for managing projects and informations.
 
 PythonMachineLearning: Simple machine learning example in Python 
