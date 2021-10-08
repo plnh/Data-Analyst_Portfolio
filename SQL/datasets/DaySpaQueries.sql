@@ -1,16 +1,4 @@
-
-
-
-
-
-
-
-
-
-
-
---Step 1 of the fraud analysis
-
+/*Step 1 of the fraud analysis */
 WITH #StartStopPoints AS ( 
 SELECT
 -- This section focuses on entrances:  CustomerVisitStart
@@ -35,7 +23,7 @@ SELECT
 	NULL AS StartOrdinal
 FROM dbo.DaySpaVisit dsv)  
 
---Step 2
+/* Step 2 */
 SELECT s.*,
     -- Build a stream of all check-in and check-out events
 	ROW_NUMBER() OVER (
@@ -48,7 +36,7 @@ SELECT s.*,
 INTO #StartStopOrder
 FROM #StartStopPoints s ;
 
---Complete the fraud analysis
+/* Complete the fraud analysis */
 SELECT
 	s.CustomerID,
 	MAX(2 * s.StartOrdinal - s.StartOrEndOrdinal) AS MaxConcurrentCustomerVisits
