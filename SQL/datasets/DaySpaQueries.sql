@@ -1,3 +1,50 @@
+SELECT * 
+fROM DaySpaRollup
+order by CustomerID;
+
+SELECT * 
+fROM DaySpaVisit
+order by CustomerVisitStart;
+
+
+/* MAXIMUM OVERLAP */
+Drop TABLE IF EXISTS #StartStopOrder;
+
+/*Step 1 CTE startstoppoint */
+WITH #StartStopPoints AS ( 
+SELECT
+-- This section focuses on entrances:  CustomerVisitStart
+	dsv.CustomerVisitStart AS TimeUTC,
+	1 AS EntryCount,
+    -- Get a unique, ascending row number
+	Row_number() OVER (
+      -- Ordered by the customer visit start time
+      ORDER BY dsv.CustomerVisitStart
+    ) AS StartOrdinal
+FROM DaySpaVisit dsv
+UNION ALL
+-- This section focuses on departures:  CustomerVisitEnd
+SELECT
+	dsv.CustomerVisitEnd AS TimeUTC,
+	-1 AS EntryCount,
+	NULL AS StartOrdinal
+FROM DaySpaVisit dsv)  
+/* Step 2 CTE #StartStopOrder*/
+SELECT 
+   s.TimeUTC,   
+   s.EntryCount,    
+   s.StartOrdinal,    
+   ROW_NUMBER() OVER (ORDER BY s.TimeUTC, s.StartOrdinal) AS StartOrEndOrdinal
+INTO #StartStopOrder
+FROM #StartStopPoints s ;
+
+SELECT MAX(2 * s.StartOrdinal - s.StartOrEndOrdinal) AS MaxConcurrentVisitors
+FROM #StartStopOrder s
+WHERE s.EntryCount = 1
+
+
+/*FRAUD ANALYSIS */
+Drop TABLE IF EXISTS #StartStopOrder;
 /*Step 1 of the fraud analysis */
 WITH #StartStopPoints AS ( 
 SELECT
@@ -40,6 +87,7 @@ FROM #StartStopPoints s ;
 SELECT
 	s.CustomerID,
 	MAX(2 * s.StartOrdinal - s.StartOrEndOrdinal) AS MaxConcurrentCustomerVisits
+INTO #fraud_list
 FROM #StartStopOrder s
 WHERE s.EntryCount = 1
 GROUP BY s.CustomerID
@@ -48,3 +96,47 @@ GROUP BY s.CustomerID
 HAVING MAX(2 * s.StartOrdinal - s.StartOrEndOrdinal) > 2
 -- Sort by the largest number of max concurrent customer visits
 ORDER BY MaxConcurrentCustomerVisits desc;
+
+/* Maximum overlap exluding fraud */
+Drop TABLE IF EXISTS new_list;
+--Creat new table without clients commited fraud--
+SELECT *
+INTO new_list
+FROM DaySpaVisit
+where CustomerID not in ( select CustomerID from #fraud_list); 
+
+
+Drop TABLE IF EXISTS #StartStopOrder;
+
+/*Step 1 CTE startstoppoint */
+WITH #StartStopPoints AS ( 
+SELECT
+-- This section focuses on entrances:  CustomerVisitStart
+	dsv.CustomerVisitStart AS TimeUTC,
+	1 AS EntryCount,
+    -- We want to know each customer's entrance stream
+    -- Get a unique, ascending row number
+	Row_number() OVER (
+      -- Ordered by the customer visit start time
+      ORDER BY dsv.CustomerVisitStart
+    ) AS StartOrdinal
+FROM new_list dsv
+UNION ALL
+-- This section focuses on departures:  CustomerVisitEnd
+SELECT
+	dsv.CustomerVisitEnd AS TimeUTC,
+	-1 AS EntryCount,
+	NULL AS StartOrdinal
+FROM new_list dsv)  
+/* Step 2 CTE #StartStopOrder*/
+SELECT 
+   s.TimeUTC,   
+   s.EntryCount,    
+   s.StartOrdinal,    
+   ROW_NUMBER() OVER (ORDER BY s.TimeUTC, s.StartOrdinal) AS StartOrEndOrdinal
+INTO #StartStopOrder
+FROM #StartStopPoints s ;
+
+SELECT MAX(2 * s.StartOrdinal - s.StartOrEndOrdinal) AS MaxConcurrentVisitors
+FROM #StartStopOrder s
+WHERE s.EntryCount = 1
