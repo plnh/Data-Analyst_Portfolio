@@ -9,4 +9,4 @@ A collection of selected data analyst projects to demonstrate skill sets, knowle
 ## In Progress
 Excel: example of dashboards, functions for managing projects and informations.
 
-PythonMachineLearning: Simple machine learning example in Python 
+PythonMachineLearning : Simple machine learning example in Python 
